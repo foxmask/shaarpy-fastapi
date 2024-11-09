@@ -1,0 +1,8 @@
+-r requirements.txt
+wheel
+coverage
+flake8
+pytest
+#semgrep
+pipdeptree
+twine

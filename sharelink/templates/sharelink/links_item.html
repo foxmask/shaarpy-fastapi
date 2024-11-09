@@ -1,0 +1,37 @@
+<div class="card {% if data.sticky %}border-info{% endif %}">
+    {% if data.image %}
+    <img src="{{ data.image }}" class="card-img-top" style="width: 20rem;">
+    {% endif %}
+    <div class="card-body">
+      {% if data.url %}
+      <h5><a href="{{ data.url }}">{{ data.title }}</a></h5>
+      {% else %}
+      <h5><a href="{{ url_for ('links_detail', url_hashed=data.url_hashed) }}">{{ data.title }}</a></h5>
+      {% endif %}
+      {% if data.video %}
+      <div class="ratio ratio-16x9">
+        <iframe src="{{ data.video }}" title="video" allowfullscreen></iframe>
+      </div>
+      {% endif %}
+      <div class="card-text">{{ data.text | markdown | safe }}</div>
+    </div>
+    <div class="card-footer text-muted">
+      {% if data.sticky %}
+      <i class="fas fa-thumbtack"></i> Sticky -
+      {% endif %}
+      {% if data.private %}
+      <i class="fas fa-user-secret"> Private</i> -
+      {% endif %}
+      <i class="far fa-clock"> {{ data.date_created }} </i> -
+      <a role="button" href="{{ url_for ('links_edit', url_hashed=data.url_hashed) }}" class="btn btn-outline-primary btn-sm">
+        <i class="far fa-edit"> edit </i>
+      </a>
+      <a role="button" href="{{ url_for ('links_delete', link_id=data.id ) }}" class="btn btn-outline-danger btn-sm">
+        <i class="far fa-trash-alt"> delete </i>
+      </a>
+      <a href="{{ url_for ('links_detail', url_hashed=data.url_hashed) }}">Permalink</a> - {% if data.url %}{{ data.url }}{% else %}{{  url_for ('links_detail', slug=data.url_hashed) }}{% endif %}
+      {% if data.tags %}
+      - <i class="fas fa-tags"> {{ data.tags }} {#| tags | safe #}</i>
+      {% endif %}
+    </div>
+</div>

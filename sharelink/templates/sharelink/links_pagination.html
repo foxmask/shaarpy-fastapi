@@ -1,0 +1,36 @@
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+
+        {# first page #}
+        {% if offset == 0  %}
+        {% elif (offset > 0 and offset <= settings.LINKS_PER_PAGE) or offset == 0 or offset <= ttl %}
+        <li class="page-item"><a class="page-link" href="{{ url_for (url) }}">&laquo; first</a></li>
+        {% endif %}
+
+        {# previous page #}
+        {% if offset - settings.LINKS_PER_PAGE > 0 %}
+        <li class="page-item"><a class="page-link" href="{{ url_for (url) }}?offset={{ offset - settings.LINKS_PER_PAGE }}&limit={{ limit }}">previous</a></li>
+        {% endif %}
+
+        {# current page #}
+        <li class="page-item active" aria-current="page">
+            <a class="page-link">Offset {{ offset }} of {{ ttl }}</a>
+        </li>
+
+        {# next page #}
+        {# if (offset  == 0 or offset > 0) and offset + settings.LINKS_PER_PAGE < ttl #}
+        {% if offset + settings.LINKS_PER_PAGE < ttl %}
+        <li class="page-item"><a class="page-link" href="{{ url_for (url) }}?offset={{ offset + settings.LINKS_PER_PAGE }}&limit={{ limit }}">next</a></li>
+        {% endif %}
+
+        {# last page when we are on the first page #}
+        {% if offset == 0 %}
+        <li class="page-item"><a class="page-link" href="{{ url_for (url) }}?offset={{ ttl - (ttl % settings.LINKS_PER_PAGE) }}&limit={{ limit }}">&raquo; last</a></li>
+        {% endif %}
+
+        {# last page #}
+        {% if offset > 0 and ttl - (ttl % settings.LINKS_PER_PAGE) == 0 %}
+        <li class="page-item"><a class="page-link" href="{{ url_for (url) }}?offset={{ ttl - (ttl % settings.LINKS_PER_PAGE) }}&limit={{ limit }}">&raquo; last</a></li>
+        {% endif %}
+    </ul>
+</nav>
