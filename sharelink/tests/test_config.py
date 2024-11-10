@@ -14,7 +14,7 @@ def test_settings():
     assert isinstance(settings.SHARELINK_ROBOT, str)
     assert isinstance(settings.SHARELINK_URL, str)
     assert isinstance(settings.SHARELINK_TZ, str)
-    assert isinstance(settings.DATABASE_URL, int)
+    assert isinstance(settings.DATABASE_URL, str)
     assert isinstance(settings.LANGUAGE_CODE, str)
     assert isinstance(settings.SECRET_KEY, str)
     assert isinstance(settings.LINKS_PER_PAGE, int)
