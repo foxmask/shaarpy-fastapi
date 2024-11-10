@@ -1,0 +1,3 @@
+recursive-include sharealink *.html *.png *.css *.py *.md env.sample
+
+recursive-exclude sharealink tests

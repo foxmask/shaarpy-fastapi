@@ -31,7 +31,12 @@
       </a>
       <a href="{{ url_for ('links_detail', url_hashed=data.url_hashed) }}">Permalink</a> - {% if data.url %}{{ data.url }}{% else %}{{  url_for ('links_detail', slug=data.url_hashed) }}{% endif %}
       {% if data.tags %}
-      - <i class="fas fa-tags"> {{ data.tags }} {#| tags | safe #}</i>
+      - <i class="fas fa-tags">
+        {% for tag in data.tags.split(',')%}
+        {% include 'sharelink/links_tags.html' with context %}
+        {# data.tags | safe #}
+        {% endfor %}
+        </i>
       {% endif %}
     </div>
 </div>

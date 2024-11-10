@@ -6,3 +6,7 @@ pytest
 #semgrep
 pipdeptree
 twine
+pip-audit
+bandit
+hypothesis
+httpx

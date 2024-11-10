@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-    Sharelink
+2024 - ShareLink - 셰어 링크
 """
 
 VERSION = (0, 0, 1)  # PEP 386

@@ -2,17 +2,18 @@
 """
 2024 - ShareLink - 셰어 링크
 """
+
 from datetime import date, datetime, timedelta, timezone
 
 from typing import Annotated, Optional, Tuple
 
-from fastapi import Query, Form, HTTPException
+from fastapi import HTTPException, Query, Form
 
 from pydantic import BaseModel
-from sqlmodel import Session, SQLModel,  select, Field, func
+from sqlmodel import Session, SQLModel, select, Field, func, column
 
-from core.hashed_urls import small_hash
-from core.articles import get_article
+from sharelink.core.hashed_urls import small_hash
+from sharelink.core.articles import get_article
 
 
 class LinksForm(BaseModel):
@@ -70,9 +71,8 @@ async def get_links(session: Session,
     count_query = select(func.count(Links.id))
     count = session.exec(count_query).one()  # Get the count
 
-    links = session.exec(
-        select(Links).order_by(Links.date_created.desc()).offset(offset).limit(limit)
-        )
+    query = select(Links).order_by(Links.date_created.desc()).offset(offset).limit(limit)
+    links = session.exec(query)
     return links, count
 
 
@@ -131,9 +131,7 @@ async def add_link(link_form: Annotated[LinksForm, Form()],
 
     # let's get the content of the URL only if JUST the URL field has been filled
     # otherwise we'll use URL + title or/and text
-    if len(link_form.url.strip()) > 0 and\
-       (len(link_form.title.strip()) == 0 and
-       len(link_form.text.strip()) == 0):
+    if len(link_form.url.strip()) > 0 and (len(link_form.title.strip()) == 0 and len(link_form.text.strip()) == 0):
         title, text, image, video = await get_article(link_form.url.strip())
 
     link = Links(url=link_form.url.strip(),
@@ -185,15 +183,41 @@ async def update_link(url_hashed: str,
     return link
 
 
-async def get_links_tags(session: Session,
-                         offset: int = 0,
-                         limit: Annotated[int, Query(le=50)] = 50,):
+async def get_tags(session: Session):
     """
     get the tags of all the links
     """
-    return session.exec(
-        select(Links).where(Links.tags is not None).offset(offset).limit(limit)
-        ).all()
+    return session.exec(select(Links)).all()
+
+
+async def get_links_by_tag(session: Session,
+                           tag: str,
+                           offset: int = 0,
+                           limit: Annotated[int, Query(le=10)] = 10) -> Tuple[int, int]:
+    """
+    get the links related to a tag
+    """
+
+    tag = None if tag == '0Tag' else tag
+
+    if tag:
+        count_query = select(func.count(Links.id)).filter(column("tags").contains(tag))
+        count = session.exec(count_query).one()  # Get the count
+
+        links = session.exec(
+            select(Links).filter(column("tags").contains(tag)).order_by(
+                Links.date_created.desc()).offset(offset).limit(limit)
+        )
+    else:
+        count_query = select(func.count(Links.id)).where(Links.tags is None)
+        count = session.exec(count_query).one()  # Get the count
+
+        links = session.exec(
+            select(Links).where(Links.tags is None).order_by(
+                Links.date_created.desc()).offset(offset).limit(limit)
+        )
+
+    return links, count
 
 
 async def get_links_daily(session: Session,
@@ -234,8 +258,7 @@ async def get_links_daily(session: Session,
     data = session.exec(select(Links).where(
         Links.date_created <= end_of_day).where(
             Links.date_created >= start_of_day).order_by(
-                Links.date_created.desc()).offset(offset).limit(limit)
-            )
+                Links.date_created.desc()).offset(offset).limit(limit))
 
     context = {
         'previous_date': previous_date,
@@ -258,8 +281,7 @@ async def get_links_private(session: Session,
 
     links = session.exec(
         select(Links).where(Links.private == 1).order_by(Links.date_created.desc()
-                                                         ).offset(offset).limit(limit)
-        )
+                                                         ).offset(offset).limit(limit))
     return links, count
 
 
@@ -274,6 +296,5 @@ async def get_links_public(session: Session,
 
     links = session.exec(
         select(Links).where(Links.private == 0).order_by(Links.date_created.desc()
-                                                         ).offset(offset).limit(limit)
-        )
+                                                         ).offset(offset).limit(limit))
     return links, count

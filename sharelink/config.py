@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     SHARELINK_DESCRIPTION: str = "Share link, thoughts, ideas and more"
     SHARELINK_ROBOT: str = "index, follow"
 
-    SECRET_KEY: str = "asecrettoeverybody"
+    SECRET_KEY: str = "itsuptousofcourse"
     COOKIE_SAMESITE: str = "none"
     COOKIE_SECURE: bool = True
     TOKEN_LOCATION: str = "body"
@@ -23,7 +23,6 @@ class Settings(BaseSettings):
 
     LINKS_PER_PAGE: int = 5
     DAILY_PER_PAGE: int = 10
-    TAGS_PER_PAGE: int = 50
 
     model_config = SettingsConfigDict(env_file=".env",
                                       env_file_encoding="utf-8",

@@ -111,3 +111,4 @@ venv.bak/
 *.sqlite*
 
 settings_debug.py
+my_tox

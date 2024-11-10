@@ -1,25 +1,3 @@
-{% extends "base.html" %}
-<title>
-{% block title %}{% if tag == '0Tag' %}
-{{ settings.SHARELINK_NAME }} :: Links without any tag
-{% elif tag %}
-{{ settings.SHARELINK_NAME }} :: Links related to tag {{ tag }}
-{% elif q %}
-{{ settings.SHARELINK_NAME }} :: Links related to {{ q }}
-{% else %}
-{{ settings.SHARELINK_NAME }}
-{% endif %}
-{% endblock %}
-</title>
-{% block og_title %}{% if tag == '0Tag' %}Links without any tag
-{% elif tag %}Links related to tag {{ tag }}
-{% elif q %}Links related to {{ q }}
-{% else %}{{ settings.SHARELINK_NAME }}{% endif %}
-{% endblock %}
-{% block content %}
-<div class="col-xs-8 col-md-8 col-lg-8 offset-xs-2 offset-md-2 offset-lg-2 mt-3">
-    {% for data in links %}
-    {% include 'sharelink/links_item.html' with context %}
-    {% endfor%}
-</div>
-{% endblock %}
+<a href="{{ url_for ('links_by_tag', tag=tag)}}">
+    <span class="badge rounded-pill text-bg-secondary">{{ tag }}</span></a>
+</a>
