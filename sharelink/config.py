@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-2024 - ShareLink - 셰어 링크
+2024 - ShareLink - config - 셰어 링크
 """
 from pydantic import BaseModel
 
@@ -8,13 +8,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """
+    base settings for the app
+    """
     DATABASE_URL: str = "sqlite:///db.sqlite3"
-    LANGUAGE_CODE: str = "fr"
+    LANGUAGE_CODE: str = "fr-fr"
     SHARELINK_NAME: str = "ShareLink - 셰어 링크"
     SHARELINK_AUTHOR: str = "FoxMaSk"
     SHARELINK_DESCRIPTION: str = "Share link, thoughts, ideas and more"
     SHARELINK_ROBOT: str = "index, follow"
-
+    SHARELINK_URL: str = "http://localhost:8001"
+    SHARELINK_TZ: str = "Europe/Paris"
     SECRET_KEY: str = "itsuptousofcourse"
     COOKIE_SAMESITE: str = "none"
     COOKIE_SECURE: bool = True

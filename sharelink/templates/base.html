@@ -9,8 +9,8 @@
     <meta name="author" content="{{ settings.SHARELINK_AUTHOR }}">
     <meta name="description" content="{{ settings.SHARELINK_DESCRIPTION }}">
     <meta name="robots" content="{{ settings.SHARELINK_ROBOT }}">
-    <link href="{{ url_for ('feed') }}" type="application/atom+xml" rel="alternate"  title="{{ settings.SHARELINK_DESCRIPTION }}">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link href="{{ url_for ('feeds') }}" type="application/atom+xml" rel="alternate"  title="{{ settings.SHARELINK_DESCRIPTION }}">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ settings.SHARELINK_NAME }}">
     <meta property="og:locale" content="{{ settings.LANGUAGE_CODE }}">
@@ -50,11 +50,11 @@
                   <a class="nav-link fas fa-universal-access" href="{{ url_for ('links_public') }}" title="Publics Links">Publics Links</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link fas fa-rss" href="{{ url_for ('feed') }}"> Feeds</a>
+                  <a class="nav-link fas fa-rss" href="{{ url_for ('feeds') }}"> Feeds</a>
                 </li>
               </ul>
               <!-- if form_search
-              include 'settings.SHARELINK/search.html'
+              include 'sharelink/search.html'
               endif -->
             </div>
         </div>

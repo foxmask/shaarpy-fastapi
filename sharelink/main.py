@@ -2,22 +2,15 @@
 """
 2024 - ShareLink - 셰어 링크
 """
-
-from typing import Annotated
-
-from fastapi import Request, FastAPI, Depends, Query
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 
-from sqlmodel import Session
-
-from sharelink.config import settings
-from sharelink.dependencies import get_session, create_db_and_tables, markdown
-from sharelink.models import get_links
+from sharelink.dependencies import create_db_and_tables, markdown
 from sharelink.router import feeds as feeds_router, links as links_router, tags as tags_router
 
 # SessionDep = Annotated[Session, Depends(get_session)]
@@ -63,40 +56,10 @@ app.add_middleware(
 )
 
 
-# C - THE APP
+# B - THE APP
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
-
-
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request,
-               offset: int = 0,
-               limit: Annotated[int, Query(le=settings.LINKS_PER_PAGE)] = 5,
-               session: Session = Depends(get_session)):
-    """
-    get the links on the home page
-    """
-
-    links, ttl = await get_links(session, offset=offset, limit=limit)
-
-    context = {
-        "request": request,
-        "links": links,
-        "ttl": ttl,
-        "offset": offset,
-        "limit": limit,
-        # link to use when using pagination
-        "url": "home",
-        "settings": settings,
-    }
-
-    response = templates.TemplateResponse("sharelink/links_list.html", context)
-    response.headers["X-Total-Count"] = str(ttl)
-    response.headers["X-Offset"] = str(offset)
-    response.headers["X-Limit"] = str(limit)
-
-    return response

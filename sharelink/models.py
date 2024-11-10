@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-2024 - ShareLink - 셰어 링크
+2024 - ShareLink - Models - 셰어 링크
 """
 
 from datetime import date, datetime, timedelta, timezone
@@ -8,7 +8,6 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Annotated, Optional, Tuple
 
 from fastapi import HTTPException, Query, Form
-
 from pydantic import BaseModel
 from sqlmodel import Session, SQLModel, select, Field, func, column
 
@@ -39,28 +38,12 @@ class LinkBase(SQLModel):
     video: str | None = None
 
 
-class LinkCreate(LinkBase):
-    date_created: datetime
-
-
-class LinkUpdate(LinkBase):
-    pass
-
-
 class Links(LinkBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     date_created: datetime
 
 
-class LinkPublic(LinkBase):
-    url_hashed: str
-    date_created: datetime
-
-
-class LinksPublic(SQLModel):
-    data: list[LinkPublic]
-    count: int
-
+# ALL functions to handle links
 
 async def get_links(session: Session,
                     offset: int = 0,
@@ -76,7 +59,10 @@ async def get_links(session: Session,
     return links, count
 
 
-async def get_link(link_id: int, session: Session):
+async def get_link(link_id: int, session: Session) -> Links:
+    """
+    get data of the link
+    """
     statement = select(Links).where(Links.id == link_id)
     link = session.exec(statement).first()
 

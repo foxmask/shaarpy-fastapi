@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-2024 - ShareLink - 셰어 링크
+2024 - ShareLink - dependencies - 셰어 링크
 """
 import pypandoc
 
@@ -19,8 +19,6 @@ async def get_session():
     with Session(engine) as session:
         yield session
 
-
-# B - TEMPLATE filter
 
 def markdown(text: str):
     """

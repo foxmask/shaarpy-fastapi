@@ -4,11 +4,9 @@
 """
 from typing import Annotated, Optional
 
-from fastapi import Request, HTTPException, Depends, Form, Query
+from fastapi import APIRouter, Request, HTTPException, Depends, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-
-from fastapi import APIRouter
 
 from fastapi_csrf_protect import CsrfProtect
 
@@ -16,10 +14,13 @@ from sqlmodel import Session
 
 from sharelink.config import settings, CsrfSettings
 from sharelink.dependencies import get_session, markdown
-from sharelink.models import LinksForm
-from sharelink.models import get_link, get_link_by_url_hashed
-from sharelink.models import get_links_private, get_links_public, get_links_daily
-from sharelink.models import add_link, update_link
+
+from sharelink.models import (
+    LinksForm,
+    get_links, get_link, get_link_by_url_hashed,
+    get_links_private, get_links_public, get_links_daily,
+    add_link, update_link
+)
 
 
 templates = Jinja2Templates(directory="templates")
@@ -38,6 +39,36 @@ def get_csrf_config():
     CSRF config
     """
     return CsrfSettings()
+
+
+@router.get("/", response_class=HTMLResponse)
+async def home(request: Request,
+               offset: int = 0,
+               limit: Annotated[int, Query(le=settings.LINKS_PER_PAGE)] = 5,
+               session: Session = Depends(get_session)):
+    """
+    get the links on the home page
+    """
+
+    links, ttl = await get_links(session, offset=offset, limit=limit)
+
+    context = {
+        "request": request,
+        "links": links,
+        "ttl": ttl,
+        "offset": offset,
+        "limit": limit,
+        # link to use when using pagination
+        "url": "home",
+        "settings": settings,
+    }
+
+    response = templates.TemplateResponse("sharelink/links_list.html", context)
+    response.headers["X-Total-Count"] = str(ttl)
+    response.headers["X-Offset"] = str(offset)
+    response.headers["X-Limit"] = str(limit)
+
+    return response
 
 
 @router.get("/newlinks/", response_class=HTMLResponse)
