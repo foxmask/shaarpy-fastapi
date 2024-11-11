@@ -25,17 +25,17 @@
   <div class="row row-cols-1 row-cols-md-3 g-4">
     <div class="col mb-3">
     {% if previous_date %}
-    <a href="{{ url_for ('daily') }}?yesterday={{ previous_date }}{#|date:'Y-m-d') #}">
+    <a href="{{ url_for ('daily') }}?yesterday={{ previous_date | filter_datetime }}">
         <i class="fas fa-long-arrow-alt-left"> </i>
         <i class="far fa-clock"> {{ previous_date }}</i>
     </a>{% endif %}
     </div>
     <div class="col mb-3">
-    <h6>{{ current_date }} {#|date:"DATE_FORMAT" #}</h6>
+    <h6>{{ current_date | filter_datetime }}</h6>
     </div>
     <div class="col mb-3">
     {% if next_date %}
-    <a href="{{ url_for ('daily') }}?yesterday={{ next_date }} {#|date:'Y-m-d') #}">
+    <a href="{{ url_for ('daily') }}?yesterday={{ next_date | filter_datetime }}">
         <i class="far fa-clock"> {{ next_date }}</i>
         <i class="fas fa-long-arrow-alt-right"> </i>
     </a>{% endif %}
@@ -54,22 +54,18 @@
           {% if data.image %}
           <img src="{{ data.image }}" class="card-img-top" />
           {% endif %}
-          {% if data.video %}
-          <div class="ratio ratio-16x9">
-            <iframe src="{{ data.video }}" title="video" allowfullscreen></iframe>
-          </div>
-          {% endif %}
-          <div class="card-text">
-            {{ data.text | markdown | safe }}
-          </div>
         </div>
         <div class="card-footer text-muted">
           {% if data.private %}
           <i class="fas fa-key"></i> -
           {% endif %}
-          <i class="far fa-clock"> {{ data.date_created }}</i>
+          <i class="far fa-clock"> {{ data.date_created | filter_datetime("%Y-%m-%d %H:%M:%S") }}</i>
           {% if data.tags %}
-          - <i class="fas fa-tags"> {{ data.tags | safe }} {#| tags | safe #}</i>
+          - <i class="fas fa-tags">
+            {% for tag in data.tags.split(',')%}
+            {% include 'sharelink/links_tags.html' with context %}
+            {% endfor %}
+          </i>
           {% endif %}
         </div>
       </div>

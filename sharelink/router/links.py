@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-2024 - ShareLink - 셰어 링크
+2024 - ShareLink - router links - 셰어 링크
 """
 from typing import Annotated, Optional
 
@@ -13,7 +13,7 @@ from fastapi_csrf_protect import CsrfProtect
 from sqlmodel import Session
 
 from sharelink.config import settings, CsrfSettings
-from sharelink.dependencies import get_session, markdown
+from sharelink.dependencies import get_session, filter_markdown, filter_datetime
 
 from sharelink.models import (
     LinksForm,
@@ -24,7 +24,8 @@ from sharelink.models import (
 
 
 templates = Jinja2Templates(directory="templates")
-templates.env.filters["markdown"] = markdown
+templates.env.filters["filter_markdown"] = filter_markdown
+templates.env.filters['filter_datetime'] = filter_datetime
 
 router = APIRouter()
 
@@ -273,6 +274,7 @@ async def daily(request: Request,
     """
     get the daily links
     """
+    # @TODO check the data related to the date
     daily_links = await get_links_daily(session=session,
                                         offset=offset,
                                         limit=limit,

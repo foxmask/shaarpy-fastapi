@@ -11,11 +11,12 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
 
 from sharelink.config import settings
-from sharelink.dependencies import get_session, markdown
+from sharelink.dependencies import get_session, filter_markdown, filter_datetime
 from sharelink.models import get_tags, get_links_by_tag
 
 templates = Jinja2Templates(directory="templates")
-templates.env.filters["markdown"] = markdown
+templates.env.filters["filter_markdown"] = filter_markdown
+templates.env.filters["filter_datetime"] = filter_datetime
 
 router = APIRouter()
 

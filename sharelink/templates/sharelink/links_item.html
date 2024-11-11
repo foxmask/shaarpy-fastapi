@@ -13,7 +13,7 @@
         <iframe src="{{ data.video }}" title="video" allowfullscreen></iframe>
       </div>
       {% endif %}
-      <div class="card-text">{{ data.text | markdown | safe }}</div>
+      <div class="card-text">{{ data.text | filter_markdown | truncate(500) | safe }}</div>
     </div>
     <div class="card-footer text-muted">
       {% if data.sticky %}
@@ -22,7 +22,7 @@
       {% if data.private %}
       <i class="fas fa-user-secret"> Private</i> -
       {% endif %}
-      <i class="far fa-clock"> {{ data.date_created }} </i> -
+      <i class="far fa-clock"> {{ data.date_created | filter_datetime("%Y-%m-%d %H:%M:%S")}} </i> -
       <a role="button" href="{{ url_for ('links_edit', url_hashed=data.url_hashed) }}" class="btn btn-outline-primary btn-sm">
         <i class="far fa-edit"> edit </i>
       </a>
@@ -34,7 +34,6 @@
       - <i class="fas fa-tags">
         {% for tag in data.tags.split(',')%}
         {% include 'sharelink/links_tags.html' with context %}
-        {# data.tags | safe #}
         {% endfor %}
         </i>
       {% endif %}

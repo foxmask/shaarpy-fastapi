@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = True
     TOKEN_LOCATION: str = "body"
     TOKEN_KEY: str = "csrf-token"
+    CSRF_TRUSTED_ORIGINS: list = ['http://localhost:8001', 'http://localhost']
 
     LINKS_PER_PAGE: int = 5
     DAILY_PER_PAGE: int = 10
@@ -45,3 +46,4 @@ class CsrfSettings(BaseModel):
     cookie_secure: bool = settings.COOKIE_SECURE
     token_location: str = settings.TOKEN_LOCATION
     token_key: str = settings.TOKEN_KEY
+    origins: list = settings.CSRF_TRUSTED_ORIGINS

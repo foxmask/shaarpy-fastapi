@@ -25,3 +25,4 @@ def test_settings():
     assert isinstance(settings.COOKIE_SECURE, bool)
     assert isinstance(settings.TOKEN_LOCATION, str)
     assert isinstance(settings.TOKEN_KEY, str)
+    assert isinstance(settings.CSRF_TRUSTED_ORIGINS, list)

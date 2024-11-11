@@ -7,10 +7,12 @@ from datetime import date, datetime, timedelta, timezone
 
 from typing import Annotated, Optional, Tuple
 
+import pytz
 from fastapi import HTTPException, Query, Form
 from pydantic import BaseModel
 from sqlmodel import Session, SQLModel, select, Field, func, column
 
+from sharelink.config import settings
 from sharelink.core.hashed_urls import small_hash
 from sharelink.core.articles import get_article
 
@@ -72,7 +74,7 @@ async def get_link(link_id: int, session: Session) -> Links:
     return link
 
 
-async def get_link_by_url_hashed(url_hashed: str, session: Session):
+async def get_link_by_url_hashed(url_hashed: str, session: Session) -> Links:
     """
     get the link related to the url_hashed
     """
@@ -85,7 +87,7 @@ async def get_link_by_url_hashed(url_hashed: str, session: Session):
     return link
 
 
-async def get_link_by_url(url: str, session: Session):
+async def get_link_by_url(url: str, session: Session) -> Links:
     """
     get the link related to the url
     """
@@ -96,7 +98,7 @@ async def get_link_by_url(url: str, session: Session):
 
 
 async def add_link(link_form: Annotated[LinksForm, Form()],
-                   session: Session):
+                   session: Session) -> Links:
     """
     let's create a link,
     two path :
@@ -112,7 +114,7 @@ async def add_link(link_form: Annotated[LinksForm, Form()],
             return link_exists
 
     # let's calculate the hashed url of the created Link (not for the URL)
-    date_created = datetime.now()
+    date_created = datetime.now(tz=pytz.timezone(settings.SHARELINK_TZ))
     url_hashed = await small_hash(date_created.strftime("%Y%m%d_%H%M%S"))
 
     # let's get the content of the URL only if JUST the URL field has been filled
@@ -131,7 +133,7 @@ async def add_link(link_form: Annotated[LinksForm, Form()],
                  image=image,
                  video=video,
                  tags=link_form.tags.strip(),
-                 date_created=datetime.now())
+                 date_created=datetime.now(tz=pytz.timezone(settings.SHARELINK_TZ)))
 
     db_link = Links.model_validate(link)
 
@@ -144,7 +146,7 @@ async def add_link(link_form: Annotated[LinksForm, Form()],
 
 async def update_link(url_hashed: str,
                       link_form: Annotated[LinksForm, Form()],
-                      session: Session):
+                      session: Session) -> Links:
     """
     save the content of an existing link
     """
@@ -169,7 +171,7 @@ async def update_link(url_hashed: str,
     return link
 
 
-async def get_tags(session: Session):
+async def get_tags(session: Session) -> Links:
     """
     get the tags of all the links
     """
@@ -209,33 +211,40 @@ async def get_links_by_tag(session: Session,
 async def get_links_daily(session: Session,
                           offset: int = 0,
                           limit: Annotated[int, Query(le=10)] = 10,
-                          yesterday: Optional[str] = None,):
+                          yesterday: Optional[str] = None,) -> dict:
     """
     get the daily links
     look for the date of "yesterday" and "tomorrow"
     then look for the data
     """
-    now = datetime.now()
-    start_of_day = datetime(now.year, now.month, now.day)
-    end_of_day = start_of_day + timedelta(days=1, seconds=-1)
-
+    previous_date = next_date = ''
+    now = datetime.now(tz=pytz.timezone(settings.SHARELINK_TZ))
     today = date.today()
 
     if yesterday:
         yesterday = datetime.strptime(yesterday, '%Y-%m-%d').replace(
             tzinfo=timezone.utc)
+
+        start_of_day = yesterday
+
     else:
         yesterday = today - timedelta(days=1, seconds=-1)
 
-    # do not return private links
-    statement = select(Links).where(Links.date_created <= yesterday)
+        start_of_day = datetime(now.year, now.month, now.day)
+
+    end_of_day = start_of_day + timedelta(days=1, seconds=-1)
+
+    # @TODO do not return private links
+    statement = select(Links).where(Links.date_created <= yesterday).order_by(
+        Links.date_created.desc())
     previous_date = session.exec(statement).first()
 
     if previous_date:
         previous_date = previous_date.date_created.date()
 
-    # do not return private links
-    statement = select(Links).where(Links.date_created > yesterday)
+    # @TODO do not return private links
+    statement = select(Links).where(Links.date_created > end_of_day).order_by(
+        Links.date_created.asc())
     next_date = session.exec(statement).first()
 
     if next_date:
@@ -266,8 +275,8 @@ async def get_links_private(session: Session,
     count = session.exec(count_query).one()  # Get the count
 
     links = session.exec(
-        select(Links).where(Links.private == 1).order_by(Links.date_created.desc()
-                                                         ).offset(offset).limit(limit))
+        select(Links).where(Links.private == 1).order_by(
+            Links.date_created.desc()).offset(offset).limit(limit))
     return links, count
 
 
@@ -281,6 +290,6 @@ async def get_links_public(session: Session,
     count = session.exec(count_query).one()  # Get the count
 
     links = session.exec(
-        select(Links).where(Links.private == 0).order_by(Links.date_created.desc()
-                                                         ).offset(offset).limit(limit))
+        select(Links).where(Links.private == 0).order_by(
+            Links.date_created.desc()).offset(offset).limit(limit))
     return links, count
