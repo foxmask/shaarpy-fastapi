@@ -44,20 +44,32 @@ To set your own ShareLink customisation, create a `.env`  file, and change those
 
 ```bash
 DATABASE_URL="sqlite:///db.sqlite3"
-LANGUAGE_CODE="fr"
-SHARELINK_NAME= "ShareLink - 셰어 링크"
-SHARELINK_AUTHOR= "FoxMaSk"
-SHARELINK_DESCRIPTION= "Share link, thoughts, ideas and more"
-SHARELINK_ROBOT= "index, follow"
+LANGUAGE_CODE="fr-fr"
 
+# SHARELINK variables
+SHARELINK_NAME="ShareLink - 셰어 링크"
+SHARELINK_AUTHOR="FoxMaSk"
+SHARELINK_DESCRIPTION="Share link, thoughts, ideas and more"
+
+# ALLOW ROBOT to index the content of the website
+SHARELINK_ROBOT="index, follow"
+SHARELINK_URL="http://localhost:8000"
+SHARELINK_TZ="Europe/Paris"
+# APP Pagination
+LINKS_PER_PAGE=5
+DAILY_PER_PAGE=10
+
+# CSRF
 SECRET_KEY="itsuptousofcourse"
 COOKIE_SAMESITE="none"
 COOKIE_SECURE=True
 TOKEN_LOCATION="body"
 TOKEN_KEY="csrf-token"
+CSRF_TRUSTED_ORIGINS="http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1"
 
-LINKS_PER_PAGE=5
-DAILY_PER_PAGE=10
+# TRUSTED HOST
+ALLOWED_HOST="127.0.0.1:8000,localhost:8000,127.0.0.1,localhost"
+
 ```
 
 ## :mega: Running the Server
@@ -68,7 +80,7 @@ DAILY_PER_PAGE=10
 fastapi run main.py
 ```
 
-then, access the project with your browser http://127.0.0.1:8001/
+then, access the project with your browser http://127.0.0.1:8000/
 
 
 ## Test

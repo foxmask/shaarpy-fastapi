@@ -10,3 +10,7 @@ pip-audit
 bandit
 hypothesis
 httpx
+ruff
+types-beautifulsoup4
+mypy
+types-pytz

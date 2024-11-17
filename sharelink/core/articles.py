@@ -3,10 +3,9 @@
 import copy
 from urllib.parse import urlparse
 
-from bs4 import BeautifulSoup
-
 import newspaper
 import pypandoc
+from bs4 import BeautifulSoup
 
 
 async def url_cleaning(url: str) -> str:
@@ -18,7 +17,7 @@ async def url_cleaning(url: str) -> str:
     """
 
     if url:
-        for pattern in ('&utm_source=', '?utm_source=', '&utm_medium=', '#xtor=RSS-'):
+        for pattern in ("&utm_source=", "?utm_source=", "&utm_medium=", "#xtor=RSS-"):
             pos = url.find(pattern)
             if pos > 0:
                 url = url[0:pos]
@@ -37,10 +36,10 @@ async def _get_host(url: str) -> str:
     """
 
     o = urlparse(url)
-    hostname = o.scheme + '://' + o.hostname
-    port = ''
+    hostname = f"{o.scheme}://{o.hostname}"
+    port = ""
     if o.port is not None and o.port != 80:
-        port = ':' + str(o.port)
+        port = ":" + str(o.port)
     hostname += port
     return hostname
 
@@ -65,11 +64,11 @@ async def _drop_image_node(content: str) -> tuple:
     content: content of the html possibly containing the img
     return the first found image and the content
     """
-    my_image = ''
-    soup = BeautifulSoup(content, 'html.parser')
-    if soup.find_all('img', src=True):
-        image = soup.find_all('img', src=True)[0]
-        my_image = copy.copy(image['src'])
+    my_image = ""
+    soup = BeautifulSoup(content, "html.parser")
+    if soup.find_all("img", src=True):
+        image = soup.find_all("img", src=True)[0]
+        my_image = copy.copy(image["src"])
         # if not using copy.copy(image) before
         # image.decompose(), it drops content of the 2 vars
         # image and my_image
@@ -79,9 +78,9 @@ async def _drop_image_node(content: str) -> tuple:
 
 async def get_article(url: str) -> tuple:
     """
-        get the complete article page from the URL
-        url: URL of the article to get
-        return title text image video or the URL in case of ArticleException
+    get the complete article page from the URL
+    url: URL of the article to get
+    return title text image video or the URL in case of ArticleException
     """
     # get the complete article
     r = newspaper.Article(url, keep_article_html=True)
@@ -89,8 +88,8 @@ async def get_article(url: str) -> tuple:
         r.download()
         r.parse()
         article_html = r.article_html
-        video = r.movies[0] if len(r.movies) > 0 else ''
-        image = ''
+        video = r.movies[0] if len(r.movies) > 0 else ""
+        image = ""
         # check if there is a top_image
         if r.top_image:
             # go to check image in the article_html and grab the first one found in article_html
@@ -100,8 +99,8 @@ async def get_article(url: str) -> tuple:
             dropped = await _drop_image_node(article_html)
             image, article_html = dropped
         # convert into markdown
-        text = pypandoc.convert_text(article_html, 'md', format='html')
-        title = r.title + ' - ' + await _get_brand(url)
+        text = pypandoc.convert_text(article_html, "md", format="html")
+        title = r.title + " - " + await _get_brand(url)
 
         return title, text, image, video
     except newspaper.article.ArticleException:

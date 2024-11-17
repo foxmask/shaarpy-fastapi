@@ -1,92 +1,76 @@
 {% extends "base.html" %}
-<title>{{ settings.SHARELINK_NAME }} :: New Link/note</title>
+<title>{{ settings.SHARELINK_NAME }} :: {% if edit_link %}Edit Link/note{% else %}New Link/note{% endif %}</title>
 {% block content %}
 <div class="col-xs-8 col-md-8 col-lg-8 offset-xs-2 offset-md-2 offset-lg-2 mt-3">
-  <form action="{% if edit_link %}{{ url_for ('links_save', url_hashed=url_hashed) }}{% else %}{{ url_for ('create_link') }}{% endif %}" method="post" role="form" name="my_form" class="form-horizontal">
-    <fieldset>
-      {% if edit_link %}
-      <legend>Update the link/note</legend>
-      {% else %}
-      <legend>Share a link/a note</legend>
-      {% endif %}
-      <div class="mb-3">
-        <label class="form-label" for="id_url"> URL</label>
-        <input class="form-control" type="text" name="url" id="id_url" {% if edit_link %}value="{{ form.url }}"{% endif %} />
-      </div>
-      {% if form.url.errors %}
-      <div class="alert alert-danger" role="alert">{{ form.url.errors }}</div>
-      {% endif %}
-      <div class="mb-3">
-          <label class="form-label" for="id_title"> Title </label>
-          <input class="form-control" type="text" name="title" id="id_title" {% if edit_link %}value="{{ form.title }}"{% endif %} />
-      </div>
-      {% if form.title.errors %}
-      <div class="alert alert-danger" role="alert">{{ form.title.errors }}</div>
-      {% endif %}
-
-      {% if edit_link %}
-      <div class="mb-3">
-          <label class="form-label" for="id_image"> Image </label>
-          <input class="form-control" type="text" name="image" id="id_image" value="{{ form.image }}"/>
-      </div>
-          {% if form.image.errors %}
-      <div class="alert alert-danger" role="alert">{{ form.image.errors }}</div>
-          {% endif %}
-      <div class="mb-3">
-          <label class="form-label" for="id_video"> Video </label>
-          <input class="form-control" type="text" name="video" id="id_video" value="{{ form.video }}"/>
-      </div>
-          {% if form.video.errors %}
-      <div class="alert alert-danger" role="alert">{{ form.video.errors }}</div>
-          {% endif %}
-      {% endif %}
-    <div class="mb-3">
-      <div class="form-floating">
-        <textarea class="form-control" placeholder="Share your thoughts" name="text" id="floatingTextarea" style="height: 400px">
-          {% if edit_link %}{{ form.text }}"{% endif %}
-        </textarea>
-        <label for="floatingTextarea">Share your thoughts</label>
-      </div>
-    </div>
-    {% if form.text.errors %}
-    <div class="alert alert-danger" role="alert">{{ form.text.errors }}</div>
-    {% endif %}
-    <div class="input-group input-group-sm mb-3">
-        <span class="input-group-text" id="basic-addon1"><i class="fas fa-tags"></i></span>
-        <input class="form-control" type="text" name="tags" id="id_tags" {% if edit_link %}value="{{ form.tags }}"{% endif %} />
-    </div>
-    {% if form.tags.errors %}
-    <div class="alert alert-danger" role="alert">
-       {{ form.tags.errors }}
-    </div>
-    {% endif %}
-    <div class="mb-3">
-        <label class="form-check-label" for="id_private"><i class="fas fa-user-secret"></i> Private </label>
-        <input class="form-check-control" type="checkbox" name="private" id="id_private" {% if edit_link %}{% if form.private %} checked="checked" {% endif %}{% endif %} />
-    </div>
-    {% if form.private.errors %}
-    <div class="alert alert-danger" role="alert">
-      {{ form.private.errors }}
-    </div>
-    {% endif %}
-    <div class="mb-3">
-        <label class="form-check-label" for="id_sticky"><i class="fas fa-thumbtack"></i> Sticky </label>
-        <input class="form-check-control" type="checkbox" name="sticky" id="id_sticky" {% if edit_link %}{% if form.sticky %} checked="checked" {% endif %}{% endif %} />
-    </div>
-    {% if form.sticky.errors %}
-    <div class="alert alert-danger" role="alert">
-      {{ form.sticky.errors }}
-    </div>
-    {% endif %}
-      {% if edit_link %}
-      <a type="role" class="btn btn-success" href="{{ url_for ('links_detail', url_hashed=form.url_hashed) }}"><i class="fas fa-long-arrow-alt-left"></i> Back </a>
-      <button type="submit" class="btn btn-primary">Update link</button>
-      {% else %}
-      <a role="button" class="btn btn-success" href="{{ url_for ('home') }}"><i class="fas fa-long-arrow-alt-left"></i> Back </a>
-      <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add link</button>
-      {% endif %}
-      <input type='hidden' name='csrf-token' value="{{ csrf_token }}"/>
-    </fieldset>
-  </form>
+    <form
+        action="{% if edit_link %}{{ url_for ('links_save', url_hashed=url_hashed) }}{% else %}{{ url_for ('create_link') }}{% endif %}"
+        method="post" role="form" name="my_form" class="form-horizontal">
+        <fieldset>
+            {% if edit_link %}
+            <legend>Update the link/note</legend>
+            {% else %}
+            <legend>Share a link/a note</legend>
+            {% endif %}
+            {% if errors.all %}
+            <div class="alert alert-danger" role="alert">{{ errors.all }}</div>
+            {% endif %}
+            <div class="mb-3">
+                <label class="form-label" for="id_url"> URL</label>
+                <input class="form-control" type="text" name="url" id="id_url" {% if edit_link %}value="{{ form.url }}" {% endif %} />
+            </div>
+            {% if errors.url %}
+            <div class="alert alert-danger" role="alert">{{ errors.url }}</div>
+            {% endif %}
+            <div class="mb-3">
+                <label class="form-label" for="id_title"> Title </label>
+                <input class="form-control" type="text" name="title" id="id_title" {% if edit_link %}value="{{ form.title }}" {% endif %} />
+            </div>
+            {% if errors.title %}
+            <div class="alert alert-danger" role="alert">{{ errors.title }}</div>
+            {% endif %}
+            {% if edit_link %}
+            <div class="mb-3">
+                <label class="form-label" for="id_image"> Image </label>
+                <input class="form-control" type="text" name="image" id="id_image" value="{{ form.image }}" />
+            </div>
+            {% if errors.image %}
+            <div class="alert alert-danger" role="alert">{{ errors.image }}</div>
+            {% endif %}
+            <div class="mb-3">
+                <label class="form-label" for="id_video"> Video </label>
+                <input class="form-control" type="text" name="video" id="id_video" value="{{ form.video }}" />
+            </div>
+            {% if errors.video %}
+            <div class="alert alert-danger" role="alert">{{ errors.video }}</div>
+            {% endif %}
+            {% endif %}
+            <div class="mb-3">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Share your thoughts" name="text" id="floatingTextarea" style="height: 400px">{% if edit_link %}{{ form.text }}"{% endif %}</textarea>
+                    <label for="floatingTextarea">Share your thoughts</label>
+                </div>
+            </div>
+            <div class="input-group input-group-sm mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fas fa-tags"></i></span>
+                <input class="form-control" type="text" name="tags" id="id_tags" {% if edit_link %}value="{{ form.tags }}" {% endif %} />
+            </div>
+            <div class="mb-3">
+                <label class="form-check-label" for="id_private"><i class="fas fa-user-secret"></i> Private </label>
+                <input class="form-check-control" type="checkbox" name="private" id="id_private" {% if edit_link %}{% if form.private %} checked="checked" {% endif %}{% endif %} />
+            </div>
+            <div class="mb-3">
+                <label class="form-check-label" for="id_sticky"><i class="fas fa-thumbtack"></i> Sticky </label>
+                <input class="form-check-control" type="checkbox" name="sticky" id="id_sticky" {% if edit_link %}{% if form.sticky %} checked="checked" {% endif %}{% endif %} />
+            </div>
+            {% if edit_link %}
+            <a type="role" class="btn btn-success" href="{{ url_for ('links_detail', url_hashed=form.url_hashed) }}"><i class="fas fa-long-arrow-alt-left"></i> Back </a>
+            <button type="submit" class="btn btn-primary">Update link</button>
+            {% else %}
+            <a role="button" class="btn btn-success" href="{{ url_for ('home') }}"><i class="fas fa-long-arrow-alt-left"></i> Back </a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add link</button>
+            {% endif %}
+            <input type='hidden' name='csrf-token' value="{{ csrf_token }}" />
+        </fieldset>
+    </form>
 </div>
 {% endblock %}

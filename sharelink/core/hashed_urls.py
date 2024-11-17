@@ -2,8 +2,8 @@
 """
 2024 - ShareLink - 셰어 링크
 """
-import base64
 
+import base64
 
 # CRC Stuff
 
@@ -17,14 +17,14 @@ async def crc_that(string: str) -> int:
        https://stackoverflow.com/a/50843127/636849
     """
     a = bytearray(string, "utf-8")
-    crc = 0xffffffff
+    crc = 0xFFFFFFFF
     for x in a:
         crc ^= x << 24
         for k in range(8):
-            crc = (crc << 1) ^ 0x04c11db7 if crc & 0x80000000 else crc << 1
+            crc = (crc << 1) ^ 0x04C11DB7 if crc & 0x80000000 else crc << 1
     crc = ~crc
-    crc &= 0xffffffff
-    return int.from_bytes(crc.to_bytes(4, 'big'), 'little')
+    crc &= 0xFFFFFFFF
+    return int.from_bytes(crc.to_bytes(4, "big"), "little")
 
 
 async def small_hash(text: str) -> str:
@@ -40,8 +40,8 @@ async def small_hash(text: str) -> str:
     """
     number = await crc_that(text)
 
-    number_bytes = number.to_bytes((number.bit_length() + 7) // 8, byteorder='big')
+    number_bytes = number.to_bytes((number.bit_length() + 7) // 8, byteorder="big")
 
     encoded = base64.b64encode(number_bytes)
-    final_value = encoded.decode().rstrip('=').replace('+', '-').replace('/', '_')
+    final_value = encoded.decode().rstrip("=").replace("+", "-").replace("/", "_")
     return final_value

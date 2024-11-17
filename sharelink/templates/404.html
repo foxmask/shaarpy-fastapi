@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+<title>
+    {% block title %}{{ settings.SHARELINK_NAME }} :: Not Found{% endblock %}
+</title>
+{% block content %}
+<div class="col-xs-8 col-md-8 col-lg-8 offset-xs-2 offset-md-2 offset-lg-2 mt-3">
+    <h1>Not Found</h1>
+    <p>The requested resource was not found on this server.</p>
+</div> <!-- col-xs-8 col-md-8 col-lg-8 offset-xs-2 offset-md-2 offset-lg-2 mt-3 -->
+{% endblock %}

@@ -7,7 +7,6 @@ from sharelink.config import settings
 
 
 def test_settings():
-
     assert isinstance(settings.SHARELINK_NAME, str)
     assert isinstance(settings.SHARELINK_DESCRIPTION, str)
     assert isinstance(settings.SHARELINK_AUTHOR, str)
@@ -25,4 +24,4 @@ def test_settings():
     assert isinstance(settings.COOKIE_SECURE, bool)
     assert isinstance(settings.TOKEN_LOCATION, str)
     assert isinstance(settings.TOKEN_KEY, str)
-    assert isinstance(settings.CSRF_TRUSTED_ORIGINS, list)
+    assert isinstance(settings.CSRF_TRUSTED_ORIGINS, str)
