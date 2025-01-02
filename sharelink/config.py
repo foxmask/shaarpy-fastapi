@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     base settings for the app
     """
 
-    DATABASE_URL: str = "sqlite:///db.sqlite3"
+    DATABASE_URL: str = "sqlite://db.sqlite3"
     LANGUAGE_CODE: str = "fr-fr"
     SHARELINK_NAME: str = "ShareLink - 셰어 링크"
     SHARELINK_AUTHOR: str = "FoxMaSk"
@@ -56,3 +56,17 @@ class CsrfSettings(BaseModel):
     token_location: str = settings.TOKEN_LOCATION
     token_key: str = settings.TOKEN_KEY
     origins: str = settings.CSRF_TRUSTED_ORIGINS
+
+
+import os
+from functools import partial
+
+from tortoise.contrib.fastapi import RegisterTortoise
+
+register_orm = partial(
+    RegisterTortoise,
+    db_url=os.getenv("DB_URL", "sqlite://db.sqlite3"),
+    modules={"models": ["models"]},
+    generate_schemas=True,
+    add_exception_handlers=True,
+)

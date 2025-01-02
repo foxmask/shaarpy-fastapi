@@ -3,9 +3,9 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sharelink"
+name = "shaarpy-fastapi"
 version = "0.0.1"
-description = "Share Link - 셰어 링크: Share your thoughts, links, ideas, notes. If you ever wanted Shaarli in python, that's it ^_*"
+description = "Shaarpy FastAPI: Share your thoughts, links, ideas, notes. self-hosting bookmarks and micro blogging. If you ever wanted Shaarli in python, that's it ^_* (w/ FastAPI)"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
@@ -39,9 +39,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/foxmask/sharelink/"
-Documentation = "https://github.com/foxmask/sharelink/blob/main/README.md"
-Source = "https://github.com/foxmask/sharelink/"
+Homepage = "https://github.com/foxmask/shaarpy-fastapi/"
+Documentation = "https://github.com/foxmask/shaarpy-fastapi/blob/main/README.md"
+Source = "https://github.com/foxmask/shaarpy-fastapi/"
 
 [tool.ruff]
 line-length = 100
@@ -83,3 +83,23 @@ namespaces = false
 
 [tool.setuptools]
 include-package-data = false
+
+[tool.coverage.run]
+source_pkgs = ["sharelink", "tests"]
+
+[tool.coverage.report]
+#exclude_lines = [
+#    "pragma: no cover",
+#    "if typing.TYPE_CHECKING:",
+#    "@typing.overload",
+#    "raise NotImplementedError",
+#]
+
+#[tool.mypy]
+#strict = true
+#ignore_missing_imports = true
+#python_version = "3.11"
+
+#[tool.pytest.ini_options]
+#addopts = "-rXs --strict-config --strict-markers"
+#xfail_strict = true

@@ -16,10 +16,11 @@ from sqlalchemy.engine.result import ScalarResult
 from sqlmodel import Session, func, select
 
 from sharelink.config import CsrfSettings, settings
-from sharelink.core.articles import get_article
 from sharelink.core.hashed_urls import small_hash
-from sharelink.dependencies import filter_datetime, filter_markdown, get_session
-from sharelink.models import Links, LinksForm
+from sharelink.dependencies import filter_datetime, filter_markdown
+from sharelink.dependencies_sqlalchemy import get_session
+from sharelink.forms import LinksForm
+from sharelink.models import Links
 
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["filter_markdown"] = filter_markdown
@@ -33,7 +34,7 @@ router = APIRouter()
 
 
 @CsrfProtect.load_config
-def get_csrf_config():
+def get_csrf_config():  # type: ignore
     """
     CSRF config
     """
@@ -49,7 +50,7 @@ async def home(
     offset: int = 0,
     limit: Annotated[int, Query(le=settings.LINKS_PER_PAGE)] = 5,
     session: Session = Depends(get_session),
-):
+) -> HTMLResponse:
     """
     get the links on the home page
     """
@@ -80,7 +81,7 @@ async def create_link_form(
     request: Request,
     csrf_protect: CsrfProtect = Depends(),
     session: Session = Depends(get_session),
-):
+) -> HTMLResponse:
     """
     form to create a link
     """
@@ -100,13 +101,13 @@ async def create_link_form(
     return response
 
 
-# @router.post("/links/", response_class=RedirectResponse, status_code=302)
-@router.post("/newlinks/", response_class=HTMLResponse)
+# @router.post("/newlinks/", response_class=HTMLResponse)
+@router.post("/newlinks/", response_class=HTMLResponse, status_code=302)
 async def create_link(
     request: Request,
     csrf_protect: CsrfProtect = Depends(),
     session: Session = Depends(get_session),
-):
+) -> HTMLResponse:
     """
     Form submitted, save the link
     """
@@ -118,12 +119,27 @@ async def create_link(
         # form validated
         linkForm = LinksForm(**form)
 
-        # add link if it does not already exist
-        link = await add_link(session=session, link_form=linkForm)
-        if link:
-            redirect_url = request.url_for("links_detail", url_hashed=link.url_hashed)
+        if linkForm.url:
+            existing_link = await get_link_by_url(url=str(linkForm.url), session=session)
+            if existing_link:
+                context = {
+                    "request": request,
+                    "data": existing_link,
+                    "settings": settings,
+                }
+                response = templates.TemplateResponse("sharelink/links_detail.html", context)
+                csrf_protect.unset_csrf_cookie(response)  # prevent token reuse
+                return response
 
-        response: RedirectResponse = RedirectResponse(redirect_url, status_code=303)
+        # add link if it does not already exist
+        new_link = await add_link(session=session, link_form=linkForm)
+        context = {
+            "request": request,
+            "data": new_link,
+            "settings": settings,
+        }
+
+        response = templates.TemplateResponse("sharelink/links_detail.html", context)
         csrf_protect.unset_csrf_cookie(response)  # prevent token reuse
 
     except ValidationError as e:
@@ -152,7 +168,9 @@ async def create_link(
 
 
 @router.get("/links/{url_hashed}", response_class=HTMLResponse)
-async def links_detail(request: Request, url_hashed: str, session: Session = Depends(get_session)):
+async def links_detail(
+    request: Request, url_hashed: str, session: Session = Depends(get_session)
+) -> HTMLResponse:
     """
     view the link by its hashed URL
     """
@@ -174,7 +192,7 @@ async def links_edit(
     url_hashed: str,
     csrf_protect: CsrfProtect = Depends(),
     session: Session = Depends(get_session),
-):
+) -> HTMLResponse:
     """
     edit the link by its hashed URL
     """
@@ -198,13 +216,13 @@ async def links_edit(
     return response
 
 
-@router.post("/save/{url_hashed}", response_class=RedirectResponse, status_code=302)
+@router.post("/save/{url_hashed}", response_class=HTMLResponse)
 async def links_save(
     request: Request,
     url_hashed: str,
     csrf_protect: CsrfProtect = Depends(),
     session: Session = Depends(get_session),
-):
+) -> HTMLResponse:
     """
     Form submitted, update Link
     """
@@ -218,8 +236,13 @@ async def links_save(
         # update link if it already exists
         link = await update_link(url_hashed=url_hashed, link_form=linkForm, session=session)
 
-        redirect_url = request.url_for("links_detail", url_hashed=link.url_hashed)
-        response: RedirectResponse = RedirectResponse(redirect_url, status_code=303)
+        context = {
+            "request": request,
+            "data": link,
+            "settings": settings,
+        }
+
+        response = templates.TemplateResponse("sharelink/links_detail.html", context)
         csrf_protect.unset_csrf_cookie(response)  # prevent token reuse
 
     except ValidationError as e:
@@ -248,7 +271,9 @@ async def links_save(
 
 
 @router.get("/delete/{link_id}", response_class=RedirectResponse, status_code=302)
-async def links_delete(request: Request, link_id: int, session: Session = Depends(get_session)):
+async def links_delete(
+    request: Request, link_id: int, session: Session = Depends(get_session)
+) -> RedirectResponse:
     """
     delete a link by its ID
     """
@@ -271,14 +296,12 @@ async def get_links(
     session: Session,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Tuple[ScalarResult[Links], int]:
+) -> Tuple[ScalarResult[Links], int | None]:
     """
     get all the links
     """
-    count_query = select(func.count(Links.id))
-    count = session.exec(count_query).one()  # Get the count
-
-    query = select(Links).order_by(Links.date_created.desc()).offset(offset).limit(limit)
+    count = session.exec(select(func.count()).select_from(Links)).first()
+    query = select(Links).order_by(Links.date_created.desc()).offset(offset).limit(limit)  # type: ignore
     links = session.exec(query)
     return links, count
 
@@ -325,32 +348,21 @@ async def add_link(link_form: Annotated[LinksForm, Form()], session: Session) ->
     1 - grab the content of an URL from the form and fill title and text from that URL
     2 - fill title text url from the form
     """
-    title = text = image = video = ""
-    if link_form.url:
-        link_exists = await get_link_by_url(url=str(link_form.url), session=session)
-        if link_exists:
-            return link_exists
-
     # let's calculate the hashed url of the created Link (not for the URL)
     date_created = datetime.now(tz=pytz.timezone(settings.SHARELINK_TZ))
     url_hashed = await small_hash(date_created.strftime("%Y%m%d_%H%M%S"))
 
     # let's get the content of the URL only if JUST the URL field has been filled
     # otherwise we'll use URL + title or/and text
-    if link_form.url and (link_form.title == "" and link_form.text == ""):
-        title, text, image, video = await get_article(str(link_form.url))
-
     link = Links(
         url=str(link_form.url),
         url_hashed=url_hashed,
-        # check if title is filled from a form or a link
-        title=link_form.title.strip() if link_form.title else title,
-        # check if text is filled from a form or a link
-        text=link_form.text.strip() if link_form.text else text,
+        title=link_form.title.strip(),
+        text=link_form.text.strip(),
         sticky=link_form.sticky,
         private=link_form.private,
-        image=image,
-        video=video,
+        image=link_form.image,
+        video=link_form.video,
         tags=link_form.tags.strip() if link_form.tags else "",
         date_created=datetime.now(tz=pytz.timezone(settings.SHARELINK_TZ)),
     )

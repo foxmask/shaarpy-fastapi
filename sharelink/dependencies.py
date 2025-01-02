@@ -3,37 +3,22 @@
 2024 - ShareLink - dependencies - 셰어 링크
 """
 
-from datetime import date, datetime
+from datetime import datetime
 
-import pypandoc
-from sqlmodel import Session, SQLModel, create_engine
-
-from sharelink.config import settings
-
-engine = create_engine(settings.DATABASE_URL)
-
-
-async def create_db_and_tables() -> None:
-    SQLModel.metadata.create_all(engine)
-
-
-async def get_session():  # noqa: ANN201
-    with Session(engine) as session:
-        yield session
-
+import markdown
 
 # template filters
 
 
 def filter_markdown(text: str) -> str:
     """
-    convert into Github_Flavor_Markdown
+    convert Markdown
     """
-    return pypandoc.convert_text(text, "html", format="gfm")
+    return markdown.markdown(text, extensions=["fenced_code", "codehilite", "footnotes", "tables"])
 
 
-def filter_datetime(date: str, fmt: str = "%Y-%m-%d") -> date:
+def filter_datetime(my_date: str, fmt: str = "%Y-%m-%d") -> str:
     """
     return a date from a string, formated as expected
     """
-    return datetime.strftime(date, fmt)
+    return datetime.strftime(my_date, fmt)  # type: ignore

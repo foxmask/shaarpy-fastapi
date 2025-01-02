@@ -28,7 +28,7 @@ async def links_private(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: Annotated[int, Query(le=settings.LINKS_PER_PAGE)] = 5,
-):
+) -> HTMLResponse:
     """
     get the private links
     """
@@ -58,7 +58,7 @@ async def links_public(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: Annotated[int, Query(le=settings.LINKS_PER_PAGE)] = 5,
-):
+) -> HTMLResponse:
     """
     get the public links
     """
@@ -90,17 +90,19 @@ async def get_links_private(
     session: Session,
     offset: int = 0,
     limit: Annotated[int, Query(le=10)] = 10,
-) -> Tuple[ScalarResult[Links], int]:
+) -> Tuple[ScalarResult[Links], int | None]:
     """
     only get the private link created for ourselves
     """
-    count_query = select(func.count(Links.id)).where(Links.private == 1)
-    count = session.exec(count_query).one()  # Get the count
+    # count_query = select(func.count(Links.id)).where(Links.private == 1)
+    # count = session.exec(count_query).one()  # Get the count
+
+    count = session.exec(select(func.count()).select_from(Links).where(Links.private == 1)).first()
 
     links = session.exec(
         select(Links)
         .where(Links.private == 1)
-        .order_by(Links.date_created.desc())
+        .order_by(Links.date_created.desc())  # type: ignore
         .offset(offset)
         .limit(limit)
     )
@@ -111,17 +113,18 @@ async def get_links_public(
     session: Session,
     offset: int = 0,
     limit: Annotated[int, Query(le=10)] = 10,
-) -> Tuple[ScalarResult[Links], int]:
+) -> Tuple[ScalarResult[Links], int | None]:
     """
     only get the link created for everyone
     """
-    count_query = select(func.count(Links.id)).where(Links.private == 0)
-    count = session.exec(count_query).one()  # Get the count
+    # count_query = select(func.count(Links.id)).where(Links.private == 0)
+    # count = session.exec(count_query).one()  # Get the count
+    count = session.exec(select(func.count()).select_from(Links).where(Links.private == 0)).first()
 
     links = session.exec(
         select(Links)
         .where(Links.private == 0)
-        .order_by(Links.date_created.desc())
+        .order_by(Links.date_created.desc())  # type: ignore
         .offset(offset)
         .limit(limit)
     )

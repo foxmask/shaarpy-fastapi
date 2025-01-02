@@ -6,11 +6,11 @@ pytest
 #semgrep
 pipdeptree
 twine
-pip-audit
+pip-check
+pip_audit
 bandit
 hypothesis
 httpx
 ruff
-types-beautifulsoup4
 mypy
 types-pytz

@@ -3,13 +3,13 @@
 2024 - ShareLink - router tags - 셰어 링크
 """
 
-from typing import Annotated, Tuple
+from typing import Annotated, Sequence, Tuple
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.engine.result import ScalarResult
-from sqlmodel import Sequence, Session, column, func, select
+from sqlmodel import Session, column, func, select
 
 from sharelink.config import settings
 from sharelink.dependencies import filter_datetime, filter_markdown, get_session
@@ -25,7 +25,7 @@ router = APIRouter()
 
 
 @router.get("/tags", response_class=HTMLResponse)
-async def tags_list(request: Request, session: Session = Depends(get_session)):
+async def tags_list(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
     """
     get the used tags and get the links of each tag
     """
@@ -63,7 +63,7 @@ async def links_by_tag(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: Annotated[int, Query(le=settings.LINKS_PER_PAGE)] = 5,
-):
+) -> HTMLResponse:
     """
     get the links of a given tag
     """
@@ -103,32 +103,32 @@ async def get_links_by_tag(
     tag: str,
     offset: int = 0,
     limit: Annotated[int, Query(le=10)] = 10,
-) -> Tuple[ScalarResult[Links], int]:
+) -> Tuple[ScalarResult[Links], int | None]:
     """
     get the links related to a tag
     """
 
-    tag = None if tag == "0Tag" else tag
+    tag = "" if tag == "0Tag" else tag
 
     if tag:
-        count_query = select(func.count(Links.id)).filter(column("tags").contains(tag))
-        count = session.exec(count_query).one()  # Get the count
+        count = session.exec(
+            select(func.count()).select_from(Links).filter(column("tags").contains(tag))
+        ).first()
 
         links = session.exec(
             select(Links)
             .filter(column("tags").contains(tag))
-            .order_by(Links.date_created.desc())
+            .order_by(Links.date_created.desc())  # type: ignore
             .offset(offset)
             .limit(limit)
         )
     else:
-        count_query = select(func.count(Links.id)).where(Links.tags is None)
-        count = session.exec(count_query).one()  # Get the count
+        count = session.exec(select(func.count()).select_from(Links)).first()
 
         links = session.exec(
             select(Links)
             .where(Links.tags is None)
-            .order_by(Links.date_created.desc())
+            .order_by(Links.date_created.desc())  # type: ignore
             .offset(offset)
             .limit(limit)
         )

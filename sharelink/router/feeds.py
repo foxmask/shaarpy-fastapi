@@ -5,7 +5,6 @@
 
 import datetime
 
-import pypandoc
 import pytz
 from fastapi import APIRouter, Depends
 from fastapi.templating import Jinja2Templates
@@ -42,12 +41,12 @@ async def feeds(session: Session = Depends(get_session)) -> RSSResponse:
             right_now.second,
         ),
         "generator": "ShareLink",
-        "ttl": 30,
+        "ttl": ttl,
         "item": [
             Item(
                 title=link.title,
                 link=link.url,
-                description=pypandoc.convert_text(link.text, "html", format="md"),
+                description=link.description,
                 author=settings.SHARELINK_AUTHOR,
                 pub_date=link.date_created,
             )

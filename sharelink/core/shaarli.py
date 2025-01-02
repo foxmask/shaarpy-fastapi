@@ -10,17 +10,15 @@ from datetime import datetime, timezone
 from sqlmodel import Session, create_engine, select
 
 from sharelink.config import settings
-from sharelink.core.articles import get_article
 from sharelink.core.hashed_urls import small_hash
 from sharelink.models import Links
 
 engine = create_engine(settings.DATABASE_URL)
 
 
-async def import_shaarli(the_file: str, reload_article_from_url: str) -> None:  # noqa: C901
+async def import_shaarli(the_file: str) -> None:
     """
     the_file: name of the file to import
-    reload_article_from_url: article url
     """
     private = 0
     date_created: datetime
@@ -76,16 +74,6 @@ async def import_shaarli(the_file: str, reload_article_from_url: str) -> None:  
                             link["tags"] = value_found
 
                     if link["url"] != "" and link["url"]:
-                        if reload_article_from_url:
-                            if str(link["url"]).startswith("?"):
-                                continue
-                            (
-                                link["title"],
-                                link["text"],
-                                link["image"],
-                                link["video"],
-                            ) = await get_article(str(link["url"]))
-
                         if private:
                             link["private"] = True
 

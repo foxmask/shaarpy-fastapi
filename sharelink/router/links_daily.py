@@ -3,8 +3,8 @@
 2024 - ShareLink - router daily links - 셰어 링크
 """
 
-from datetime import date, datetime, timedelta, timezone
-from typing import Annotated, Optional
+from datetime import date, datetime, timedelta
+from typing import Annotated
 
 import pytz
 from fastapi import APIRouter, Depends, Query, Request
@@ -31,8 +31,8 @@ async def daily(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: Annotated[int, Query(le=settings.DAILY_PER_PAGE)] = 5,
-    yesterday: Optional[str] = None,
-):
+    yesterday: date | None = None,
+) -> HTMLResponse:
     """
     get the daily links
     """
@@ -62,20 +62,20 @@ async def get_links_daily(
     session: Session,
     offset: int = 0,
     limit: Annotated[int, Query(le=10)] = 10,
-    yesterday: Optional[str] = None,
+    yesterday: date | None = None,
 ) -> dict:
     """
     get the daily links
     look for the date of "yesterday" and "tomorrow"
     then look for the data
     """
-    previous_date = next_date = ""
+    next_date: date | None = None
+    previous_date: date | None = None
+
     now = datetime.now(tz=pytz.timezone(settings.SHARELINK_TZ))
     today = date.today()
 
     if yesterday:
-        yesterday = datetime.strptime(yesterday, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-
         start_of_day = yesterday
 
     else:
@@ -88,26 +88,27 @@ async def get_links_daily(
     # @TODO do not return private links
     statement = (
         select(Links).where(Links.date_created <= yesterday).order_by(Links.date_created.desc())
-    )
-    previous_date = session.exec(statement).first()
+    )  # type: ignore
 
-    if previous_date:
-        previous_date = previous_date.date_created.date()
+    my_previous_date = session.exec(statement).first()
+
+    if my_previous_date:
+        previous_date = my_previous_date.date_created.date()
 
     # @TODO do not return private links
     statement = (
         select(Links).where(Links.date_created > end_of_day).order_by(Links.date_created.asc())
-    )
-    next_date = session.exec(statement).first()
+    )  # type: ignore
+    my_next_date = session.exec(statement).first()
 
-    if next_date:
-        next_date = next_date.date_created.date()
+    if my_next_date:
+        next_date = my_next_date.date_created.date()
 
     data = session.exec(
         select(Links)
         .where(Links.date_created <= end_of_day)
         .where(Links.date_created >= start_of_day)
-        .order_by(Links.date_created.desc())
+        .order_by(Links.date_created.desc())  # type: ignore
         .offset(offset)
         .limit(limit)
     )

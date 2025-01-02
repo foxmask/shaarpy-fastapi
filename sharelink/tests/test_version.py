@@ -13,6 +13,5 @@ app = FastAPI()
 client = TestClient(app)
 
 
-def test_version():
-
+def test_version() -> None:
     assert isinstance(sharelink.__version__, str)

@@ -12,9 +12,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.templating import _TemplateResponse
 
 from sharelink.config import settings
-from sharelink.dependencies import create_db_and_tables
 from sharelink.router import (
     feeds as feeds_router,
     links as links_router,
@@ -40,21 +40,12 @@ templates = Jinja2Templates(directory="templates")
 
 # SECURITY
 
-# B.1 CSRF
+# B.1 - CORS + TrustedHost
 
 
-@app.exception_handler(CsrfProtectError)
-def csrf_protect_exception_handler(request: Request, exc: CsrfProtectError):  # noqa: ANN201
-    """
-    display the CSRF Exception when occurs
-    """
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
-
-
-# B.2 - CORS + TrustedHost
-
-
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOST.split(","))
+app.add_middleware(
+    TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOST.split(",")
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -64,7 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# B.3 Session middleware
+# B.2 Session middleware
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
@@ -72,35 +63,50 @@ app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-@app.on_event("startup")
-async def on_startup() -> None:
-    """
-    Let's create the table and database if needed then instantiate connection
-    """
-    await create_db_and_tables()
+# EXCEPTIONS
 
 
-"""
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request,
-                                       exc: RequestValidationError):  # noqa: ANN201
-    errors = []
-    for error in exc.errors():
-        message = f"{error['loc'][-1]}: {error['msg']}"
-        errors.append(message)
-    return JSONResponse(status_code=422, content={"errors": errors})
-"""
+@app.exception_handler(CsrfProtectError)
+def csrf_protect_exception_handler(
+    request: Request, exc: CsrfProtectError
+) -> JSONResponse:
+    """
+    display the CSRF Exception when occurs
+    """
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
 @app.exception_handler(404)
-async def not_found_exception_handler(request: Request, exc: HTTPException):  # noqa: ANN201
+async def not_found_exception_handler(
+    request: Request, exc: HTTPException
+) -> _TemplateResponse:
     return templates.TemplateResponse(
         "404.html", {"request": request, "settings": settings}, status_code=404
     )
 
 
 @app.exception_handler(500)
-async def internal_error_exception_handler(request: Request, exc: HTTPException):  # noqa: ANN201
+async def internal_error_exception_handler(
+    request: Request, exc: HTTPException
+) -> _TemplateResponse:
     return templates.TemplateResponse(
         "500.html", {"request": request, "settings": settings}, status_code=500
     )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    if getattr(app.state, "testing", None):
+        async with lifespan_test(app) as _:
+            yield
+    else:
+        # app startup
+        async with register_orm(app):
+            # db connected
+            yield
+            # app teardown
+        # db connections closed
+
+
+app = FastAPI(title="Tortoise ORM FastAPI example", lifespan=lifespan)
+app.include_router(users_router, prefix="")

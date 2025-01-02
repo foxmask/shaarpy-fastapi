@@ -6,7 +6,7 @@
 from sharelink.config import settings
 
 
-def test_settings():
+def test_settings() -> None:
     assert isinstance(settings.SHARELINK_NAME, str)
     assert isinstance(settings.SHARELINK_DESCRIPTION, str)
     assert isinstance(settings.SHARELINK_AUTHOR, str)
